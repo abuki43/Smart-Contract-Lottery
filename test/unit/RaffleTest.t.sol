@@ -6,9 +6,7 @@ import {Raffle} from "../../src/Raffle.sol";
 import {DepoloyRaffle} from "../../script/DepolyRaffle.s.sol";
 import {HelperConfig} from "../../script/HelperConfig.s.sol";
 
-
 contract RaffleTest is Test {
-
     event RaffleEntered(address indexed player);
     event WinnerPicked(address indexed winner);
 
@@ -25,10 +23,9 @@ contract RaffleTest is Test {
     address public PLAYER = makeAddr("player");
     uint256 public constant STARTING_PLAYER_BALANCE = 10 ether;
 
-
     function setUp() external {
         DepoloyRaffle deployer = new DepoloyRaffle();
-        (raffle,helperConfig) = deployer.deployContract();
+        (raffle, helperConfig) = deployer.deployContract();
         HelperConfig.NetworkConfig memory config = helperConfig.getConfig();
         enteranceFee = config.enteranceFee;
         interval = config.interval;
@@ -36,10 +33,10 @@ contract RaffleTest is Test {
         gasLane = config.gasLane;
         subscriptionId = config.subscriptionId;
         callbackGasLimit = config.callbackGasLimit;
-        vm.deal(PLAYER,STARTING_PLAYER_BALANCE);
+        vm.deal(PLAYER, STARTING_PLAYER_BALANCE);
     }
 
-    function testRaffleIntializesOpenState() public view{
+    function testRaffleIntializesOpenState() public view {
         assert(raffle.getRaffleState() == Raffle.RaffleState.OPEN);
     }
 
@@ -50,7 +47,7 @@ contract RaffleTest is Test {
 
         vm.prank(PLAYER);
         vm.expectRevert(Raffle.Raffle__SendMoreToEnterRaffle.selector);
-        raffle.enterRaffle{value:0}();
+        raffle.enterRaffle{value: 0}();
     }
 
     function testRaffleRecordsPlayersWhenTheyEnter() public {
@@ -62,24 +59,22 @@ contract RaffleTest is Test {
 
     function testEnteringRaffleEmitsEvent() public {
         vm.prank(PLAYER);
-        vm.expectEmit(true,false,false,false,address(raffle));
+        vm.expectEmit(true, false, false, false, address(raffle));
 
         emit RaffleEntered(PLAYER);
 
         raffle.enterRaffle{value: enteranceFee}();
-
     }
 
     function testDontAllowPlayersToEnterRaffleWhileRffleIsCalculating() public {
         vm.prank(PLAYER);
-        raffle.enterRaffle{value:enteranceFee}();
+        raffle.enterRaffle{value: enteranceFee}();
         vm.warp(block.timestamp + interval + 1);
         vm.roll(block.number + 1);
         raffle.performUpkeep("");
 
-
         vm.expectRevert(Raffle.Raffle__RaffleNotOpen.selector);
         vm.prank(PLAYER);
-        raffle.enterRaffle{value:enteranceFee}();
+        raffle.enterRaffle{value: enteranceFee}();
     }
 }

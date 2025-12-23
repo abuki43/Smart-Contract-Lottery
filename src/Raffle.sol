@@ -11,17 +11,16 @@ import {AutomationCompatibleInterface} from "@chainlink/contracts/src/v0.8/autom
  * @notice THis contract is for creating a sample raffle
  * @dev Implements Chainlink VRFv2.5
  */
-contract Raffle is VRFConsumerBaseV2Plus,AutomationCompatibleInterface {
+contract Raffle is VRFConsumerBaseV2Plus, AutomationCompatibleInterface {
     error Raffle__SendMoreToEnterRaffle();
     error Raffle__TransferFailed();
     error Raffle__RaffleNotOpen();
     error Raffle__UpKeepNotNeeded(uint256 balance, uint256 playerLength, uint256 raffleState);
 
-    enum RaffleState{
+    enum RaffleState {
         OPEN,
         CALCULATING
     }
-
 
     uint16 private constant REQUEST_CONFIRMATION = 3;
     uint32 private constant NUM_WORDS = 1;
@@ -34,8 +33,6 @@ contract Raffle is VRFConsumerBaseV2Plus,AutomationCompatibleInterface {
     uint256 private s_lastTimeStamp;
     address payable s_recentWinner;
     RaffleState private s_raffleState;
-
-
 
     event RaffleEntered(address indexed player);
     event WinnerPicked(address indexed winner);
@@ -63,23 +60,28 @@ contract Raffle is VRFConsumerBaseV2Plus,AutomationCompatibleInterface {
         if (msg.value < I_ENTERANCEFEE) {
             revert Raffle__SendMoreToEnterRaffle();
         }
-        if(s_raffleState != RaffleState.OPEN){
+        if (s_raffleState != RaffleState.OPEN) {
             revert Raffle__RaffleNotOpen();
         }
         s_players.push(payable(msg.sender));
         emit RaffleEntered(msg.sender);
     }
 
-
-    
-    function fulfillRandomWords(uint256 /*requestId*/, uint256[] calldata randomWords) internal virtual override {
-
+    function fulfillRandomWords(
+        uint256,
+        /*requestId*/
+        uint256[] calldata randomWords
+    )
+        internal
+        virtual
+        override
+    {
         //CEI pattern
-        //checks 
+        //checks
         uint256 indexOfWinner = randomWords[0] % s_players.length;
         address payable recentWinner = s_players[indexOfWinner];
         s_recentWinner = recentWinner;
-        
+
         // effects(internal state ....)
         s_raffleState = RaffleState.OPEN;
         s_players = new address payable[](0);
@@ -88,28 +90,39 @@ contract Raffle is VRFConsumerBaseV2Plus,AutomationCompatibleInterface {
 
         // interactions(external .....)
         (bool success,) = recentWinner.call{value: address(this).balance}("");
-        if(!success){
+        if (!success) {
             revert Raffle__TransferFailed();
         }
-
     }
 
-
-    function checkUpkeep(bytes memory /*checkData*/) public view override returns (bool upkeepNeeded, bytes memory /*performData*/) {
+    function checkUpkeep(
+        bytes memory /*checkData*/
+    )
+        public
+        view
+        override
+        returns (
+            bool upkeepNeeded,
+            bytes memory /*performData*/
+        )
+    {
         bool timeHasPassed = (block.timestamp - s_lastTimeStamp) > I_INTERVAL;
         bool isOpen = (s_raffleState == RaffleState.OPEN);
-        bool hasBalance = address(this).balance >0;
+        bool hasBalance = address(this).balance > 0;
         bool hasPlayer = s_players.length > 0;
 
         upkeepNeeded = timeHasPassed && isOpen && hasBalance && hasPlayer;
-
     }
 
-    function performUpkeep(bytes calldata /*performData*/) external override{
-       
+    function performUpkeep(
+        bytes calldata /*performData*/
+    )
+        external
+        override
+    {
         (bool upKeepNeeded,) = checkUpkeep(" ");
-        if(!upKeepNeeded){
-            revert Raffle__UpKeepNotNeeded(address(this).balance,s_players.length,uint256(s_raffleState));
+        if (!upKeepNeeded) {
+            revert Raffle__UpKeepNotNeeded(address(this).balance, s_players.length, uint256(s_raffleState));
         }
         s_raffleState = RaffleState.CALCULATING;
 
@@ -128,19 +141,17 @@ contract Raffle is VRFConsumerBaseV2Plus,AutomationCompatibleInterface {
         );
     }
 
-       // Getter function
+    // Getter function
 
     function getEntranceFee() external view returns (uint256) {
         return I_ENTERANCEFEE;
     }
 
-    function getRaffleState() external view returns(RaffleState){
+    function getRaffleState() external view returns (RaffleState) {
         return s_raffleState;
     }
 
-    function getPlayer(uint256 index) external view returns(address){
+    function getPlayer(uint256 index) external view returns (address) {
         return s_players[index];
     }
-
-
 }
