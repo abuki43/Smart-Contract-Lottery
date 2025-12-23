@@ -5,11 +5,12 @@ import {Script} from "forge-std/Script.sol";
 import {VRFCoordinatorV2_5Mock} from "@chainlink/contracts/src/v0.8/vrf/mocks/VRFCoordinatorV2_5Mock.sol";
 import {LinkToken} from "../test/mocks/LinkToken.sol";
 
+
 abstract contract CodeConstants {
     // VRF Mock values
     uint96 public MOCK_BASE_FEE = 0.25 ether;
     uint96 public MOKC_GAS_PRICE_LINK = 1e9;
-    int256 public MOCK_WEI_PER_UINT_LINK = 1e9;
+    int256 public MOCK_WEI_PER_UINT_LINK = 4e15;
 
     uint256 public constant ETH_SEPOLIA_CHAIN_ID = 1115511;
     uint256 public constant LOCAL_CHAIN_ID = 31337;
@@ -26,6 +27,7 @@ contract HelperConfig is Script, CodeConstants {
         uint256 subscriptionId;
         uint32 callbackGasLimit;
         address link;
+        address account;
     }
 
     NetworkConfig public localNetworkConfig;
@@ -43,7 +45,8 @@ contract HelperConfig is Script, CodeConstants {
             gasLane: 0x787d74caea10b2b357790d5b5247c2f63d1d91572a9846f780606e4d953677ae,
             callbackGasLimit: 500000,
             subscriptionId: 0,
-            link:0x779877A7B0D9E8603169DdbD7836e478b4624789
+            link:0x779877A7B0D9E8603169DdbD7836e478b4624789,
+            account:0x1915F04758a5BD21A18d8c2c918355d8eee0C5CE
         });
     }
 
@@ -80,7 +83,8 @@ contract HelperConfig is Script, CodeConstants {
             gasLane: 0x787d74caea10b2b357790d5b5247c2f63d1d91572a9846f780606e4d953677ae,
             callbackGasLimit: 500000,
             subscriptionId: 0,
-            link :address(linkToken)
+            link :address(linkToken),
+            account:0x1804c8AB1F12E6bbf3894d4083f33e07309d1f38
         });
 
         return localNetworkConfig;
